@@ -1,0 +1,31 @@
+from django.db import models
+
+# Create your models here.
+   
+class User(models.Model):
+    id = models.AutoField(primary_key=True)  # Khóa chính
+    predict_score=models.FloatField(default=0)
+
+class PreLab(models.Model):
+    id = models.AutoField(primary_key=True)  # Khóa chính
+    user = models.ForeignKey(User, related_name='prelabs', on_delete=models.CASCADE)
+    name_object = models.CharField(max_length=7)
+    max_score = models.FloatField(default=0)
+    min_score = models.FloatField(default=0)
+    attempts = models.PositiveIntegerField()
+    number_of_question = models.PositiveIntegerField()
+
+    def __str__(self):
+        return self.name_object
+    
+class InLab(models.Model):
+    id = models.AutoField(primary_key=True)  # Khóa chính
+    user = models.ForeignKey(User, related_name='inlabs', on_delete=models.CASCADE)
+    name_object = models.CharField(max_length=7)
+    max_score = models.FloatField(default=0)
+    min_score = models.FloatField(default=0)
+    attempts = models.PositiveIntegerField()
+    number_of_question = models.PositiveIntegerField()
+
+    def __str__(self):
+        return self.name_object
