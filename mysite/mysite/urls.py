@@ -16,9 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from myApp.views import UserLabDataAPIView
+from myApp.views import UserLabDataAPIView,import_csv
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/inlab/',UserLabDataAPIView.as_view())
+    path('api/inlab/',UserLabDataAPIView.as_view()),
+    path('loadcsv/',import_csv,name='import_csv')
 ]

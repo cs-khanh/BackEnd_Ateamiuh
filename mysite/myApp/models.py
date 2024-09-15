@@ -29,3 +29,17 @@ class InLab(models.Model):
 
     def __str__(self):
         return self.name_object
+
+class FinalData(models.Model):
+    studentID =models.CharField(primary_key=True,max_length=7)
+    prelab1=models.FloatField(default=0)
+    inlab1=models.FloatField(default=0)
+    prelab2=models.FloatField(default=0)
+    inlab2=models.FloatField(default=0)
+    prelab3=models.FloatField(default=0)
+    inlab3=models.FloatField(default=0)
+    prelab4=models.FloatField(default=0)
+    inlab4=models.FloatField(default=0)
+    
+    def __str__(self):
+        return self.studentID
