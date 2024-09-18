@@ -40,6 +40,7 @@ def import_csv(request):
     except Exception as e:
         return HttpResponse(f'<h4>CSV file import error: {str(e)}</h4>')
 
+
 def predictInlab1(data):
     #df = pd.DataFrame([data], columns=['Prelab','Prelab-growths', 'Prelab-attempts','Prelab-questions'])
     load_model=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model1/best_rf_model1_with_scaler.pkl')
@@ -48,6 +49,8 @@ def predictInlab1(data):
     data_scaler=load_scaler.transform(df)
     predictions=load_model.predict(data_scaler)
     return predictions
+
+
 def predictInlab2(data):
     load_model=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model2/best_rf_model2_with_scaler.pkl')
     load_scaler=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model2/scaler2.pkl')
@@ -55,6 +58,8 @@ def predictInlab2(data):
     data_scaler=load_scaler.transform(df)
     predictions=load_model.predict(data_scaler)
     return predictions
+
+
 def predictInlab3(data):
     load_model=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model3/best_rf_model3_with_scaler.pkl')
     load_scaler=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model3/scaler3.pkl')
@@ -62,6 +67,8 @@ def predictInlab3(data):
     data_scaler=load_scaler.transform(df)
     predictions=load_model.predict(data_scaler)
     return predictions
+
+
 def predictInlab4(data):
     load_model=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model4/best_rf_model4_with_scaler.pkl')
     load_scaler=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model4/scaler4.pkl')
@@ -69,6 +76,8 @@ def predictInlab4(data):
     data_scaler=load_scaler.transform(df)
     predictions=load_model.predict(data_scaler)
     return predictions
+
+
 def predictLabFinal(mssv):
     try: 
         student_data=FinalData.objects.get(studentID=mssv)
@@ -88,6 +97,7 @@ def predictLabFinal(mssv):
     except FinalData.DoesNotExist:
         return -1
     
+    
 class UserLabDataAPIView(APIView):
     def post(self, request):
         data_s = request.data 
@@ -98,7 +108,6 @@ class UserLabDataAPIView(APIView):
             # Lặp qua từng object trong danh sách data
             for entry in data:
                 name_object = entry.get('nameObject', '')
-
                 # Kiểm tra nếu là Prelab
                 if 'Prelab' in name_object:
                     PreLab.objects.update_or_create(

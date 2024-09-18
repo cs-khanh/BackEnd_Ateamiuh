@@ -232,6 +232,8 @@ X_train1, X_test1, y_train1, y_test1 = train_test_split(X1, Y1, test_size=0.1
                                                         , random_state=42)
 print(X_train1)
 print(X_test1)
+# X_test1.to_csv('X_test_model1.csv',index=False)
+# y_test1.to_csv('y_test_model1.csv',index=False)
 # Chuẩn hóa dữ liệu
 scaler = MinMaxScaler()
 X_train1_scaled = scaler.fit_transform(X_train1)
@@ -255,6 +257,7 @@ accuracy_Random1 = accuracy_score(y_test1, y_pred)
 print("Accuracy for Random Forest with MinMax Scaling:", accuracy_Random1)
 
 # Lưu mô hình và scaler vào file
+"""
 model_filename = "ModelsBaiToan1/Model1/best_rf_model1_with_scaler.pkl"
 joblib.dump(best_rf_model, model_filename)
 scaler_filename = "ModelsBaiToan1/Model1/scaler1.pkl"
@@ -262,6 +265,7 @@ joblib.dump(scaler, scaler_filename)
 
 print(f"Model saved to {model_filename}")
 print(f"Scaler saved to {scaler_filename}")
+"""
 
 
 """

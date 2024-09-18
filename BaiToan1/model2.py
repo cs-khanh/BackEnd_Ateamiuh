@@ -238,6 +238,8 @@ X2 = labDF[['Prelab1', 'Prelab1-attempts', 'Prelab1-questions',
             'Prelab2-attempts','Prelab2-questions','Prelab2-growths']]
 Y2 = labDF['Inlab2']
 X_train2, X_test2, y_train2, y_test2 = train_test_split(X2, Y2,stratify=Y2, test_size=0.1, random_state=42)
+# X_test2.to_csv('X_test_model2.csv',index=False)
+# y_test2.to_csv('y_test_model2.csv',index=False)
 print(X_train2)
 print(X_test2)
 scaler = MinMaxScaler()
@@ -258,6 +260,7 @@ accuracy_Random2 = accuracy_score(y_test2, y_pred)
 print("Accuracy for Random Forest with MinMax Scaling:", accuracy_Random2)
 
 # Lưu mô hình và scaler vào file
+"""
 model_filename = "ModelsBaiToan1/Model2/best_rf_model2_with_scaler.pkl"
 joblib.dump(best_rf_model, model_filename)
 scaler_filename = "ModelsBaiToan1/Model2/scaler2.pkl"
@@ -265,6 +268,7 @@ joblib.dump(scaler, scaler_filename)
 
 print(f"Model saved to {model_filename}")
 print(f"Scaler saved to {scaler_filename}")
+"""
 
 
 
