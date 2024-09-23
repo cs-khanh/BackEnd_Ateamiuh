@@ -34,6 +34,7 @@ class QuestionData(models.Model):
     mssv= models.CharField(max_length=8)
     question=models.CharField()
     numberOfQuestion=models.PositiveIntegerField(default=1)
+    scorePredict=models.FloatField(default=0)
     
 class FinalData(models.Model):
     studentID =models.CharField(primary_key=True,max_length=7)

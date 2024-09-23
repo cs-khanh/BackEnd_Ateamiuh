@@ -10,10 +10,11 @@ import joblib
 import csv
 from django.http import HttpResponse
 from BaiToan2.processing import text_clean,text_sementic,addFeature,Words2Text,Text2Words
+path_root="C:/Users/admin/Desktop/WebsiteAteamIUH/BackEnd_Ateamiuh/"
 # Create your views here.
 def import_csv(request):
     try:
-        csv_path="D:/HK1_2024-2025/AI_HCM/BaiToan3/data_final.csv"
+        csv_path=path_root+"BaiToan3/data_final.csv"
         
         with open(csv_path,newline='',encoding='utf-8') as csvfile:
             reader=csv.reader(csvfile,delimiter=',')
@@ -44,8 +45,8 @@ def import_csv(request):
 
 def predictInlab1(data):
     #df = pd.DataFrame([data], columns=['Prelab','Prelab-growths', 'Prelab-attempts','Prelab-questions'])
-    load_model=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model1/best_rf_model1_with_scaler.pkl')
-    load_scaler=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model1/scaler1.pkl')
+    load_model=joblib.load(path_root+'ModelsBaiToan1/Model1/best_rf_model1_with_scaler.pkl')
+    load_scaler=joblib.load(path_root+'ModelsBaiToan1/Model1/scaler1.pkl')
     df=np.array(data).reshape(1,-1)
     data_scaler=load_scaler.transform(df)
     predictions=load_model.predict(data_scaler)
@@ -53,8 +54,8 @@ def predictInlab1(data):
 
 
 def predictInlab2(data):
-    load_model=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model2/best_rf_model2_with_scaler.pkl')
-    load_scaler=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model2/scaler2.pkl')
+    load_model=joblib.load(path_root+'ModelsBaiToan1/Model2/best_rf_model2_with_scaler.pkl')
+    load_scaler=joblib.load(path_root+'ModelsBaiToan1/Model2/scaler2.pkl')
     df=np.array(data).reshape(1,-1)
     data_scaler=load_scaler.transform(df)
     predictions=load_model.predict(data_scaler)
@@ -62,8 +63,8 @@ def predictInlab2(data):
 
 
 def predictInlab3(data):
-    load_model=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model3/best_rf_model3_with_scaler.pkl')
-    load_scaler=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model3/scaler3.pkl')
+    load_model=joblib.load(path_root+'ModelsBaiToan1/Model3/best_rf_model3_with_scaler.pkl')
+    load_scaler=joblib.load(path_root+'ModelsBaiToan1/Model3/scaler3.pkl')
     df=np.array(data).reshape(1,-1)
     data_scaler=load_scaler.transform(df)
     predictions=load_model.predict(data_scaler)
@@ -71,8 +72,8 @@ def predictInlab3(data):
 
 
 def predictInlab4(data):
-    load_model=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model4/best_rf_model4_with_scaler.pkl')
-    load_scaler=joblib.load('D:/HK1_2024-2025/AI_HCM/ModelsBaiToan1/Model4/scaler4.pkl')
+    load_model=joblib.load(path_root+'ModelsBaiToan1/Model4/best_rf_model4_with_scaler.pkl')
+    load_scaler=joblib.load(path_root+'ModelsBaiToan1/Model4/scaler4.pkl')
     df=np.array(data).reshape(1,-1)
     data_scaler=load_scaler.transform(df)
     predictions=load_model.predict(data_scaler)
@@ -83,7 +84,7 @@ def predictLabFinal(arrScore):
     arr=[]
     for point in arrScore:
         arr.append(point)
-    load_model=joblib.load('D:/HK1_2024-2025/AI_HCM/BaiToan3/rf_model.pkl')
+    load_model=joblib.load(path_root+'BaiToan3/rf_model.pkl')
     data=np.array(arr).reshape(1,-1)
     predictions=load_model.predict(data)
     try:
@@ -186,28 +187,31 @@ class UserLabDataAPIView(APIView):
             mssv=int(data_s.get('data')[0])
             question=str(data_s.get('data')[1])
             numberoftimes=int(data_s.get('data')[2])
-            QuestionData.objects.create(
-                mssv=mssv,
-                question=question,
-                numberOfQuestion=numberoftimes
-            )
+            studenID=mssv
+            questionSave=question
             text=text_clean(question)
             process=text_sementic(text,'T',False)
-            tfidf_loaded = joblib.load('D:/HK1_2024-2025/AI_HCM/mysite/BaiToan2/tfidf.pkl')
+            tfidf_loaded = joblib.load(path_root+'mysite/BaiToan2/tfidf.pkl')
             df_test=addFeature(tfidf_loaded,process,mssv,numberoftimes)
-            ch2_loaded = joblib.load('D:/HK1_2024-2025/AI_HCM/mysite/BaiToan2/selectkbest_model_chi2.pkl')
+            ch2_loaded = joblib.load(path_root+'mysite/BaiToan2/selectkbest_model_chi2.pkl')
             feature_names = df_test.columns
             feature_names_chi = [feature_names[i] for i in ch2_loaded.get_support(indices=True)] 
             feature_names_chi = feature_names_chi[1:(len(feature_names_chi)-1)]
             feature_names_chi = Words2Text(feature_names_chi)
             feature_names_chi = text_sementic(feature_names_chi, 'T', False)
             feature_names_chi = Text2Words(feature_names_chi)
-            tfidf_chi2 = joblib.load('D:/HK1_2024-2025/AI_HCM/mysite/BaiToan2/tfidf1.pkl')
+            tfidf_chi2 = joblib.load(path_root+'mysite/BaiToan2/tfidf1.pkl')
             df=addFeature(tfidf_chi2,process,mssv,numberoftimes)
             df = df.drop(df.columns[22], axis=1)
             df['effort']=1/numberoftimes
-            model_loaded=joblib.load("D:/HK1_2024-2025/AI_HCM/mysite/BaiToan2/model2.pkl")
+            model_loaded=joblib.load(path_root+"mysite/BaiToan2/model2.pkl")
             prediction=model_loaded.predict(df)
+            QuestionData.objects.create(
+                mssv=studenID,
+                question=questionSave,
+                numberOfQuestion=numberoftimes,
+                scorePredict=prediction
+            )
             return Response(prediction,status=status.HTTP_200_OK)
             
                
