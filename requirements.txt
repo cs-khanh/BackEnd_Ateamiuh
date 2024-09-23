@@ -1,8 +1,8 @@
-pip install django
-pip install numpy
-pip install pandas
-pip install djangorestframework
-pip install django-cors-headers
-pip install joblib
-pip install scikit-learn
-pip install DecisionTreeClassifier
+django
+numpy
+pandas
+djangorestframework
+django-cors-headers
+joblib
+scikit-learn
+DecisionTreeClassifier

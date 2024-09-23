@@ -29,7 +29,12 @@ class InLab(models.Model):
 
     def __str__(self):
         return self.name_object
-
+class QuestionData(models.Model):
+    id = models.AutoField(primary_key=True)  # Khóa chính
+    mssv= models.CharField(max_length=8)
+    question=models.CharField()
+    numberOfQuestion=models.PositiveIntegerField(default=1)
+    
 class FinalData(models.Model):
     studentID =models.CharField(primary_key=True,max_length=7)
     prelab1=models.FloatField(default=0)
@@ -43,3 +48,17 @@ class FinalData(models.Model):
     
     def __str__(self):
         return self.studentID
+    
+class predictFinalUser(models.Model):
+    id = models.AutoField(primary_key=True)  # Khóa chính
+    prelab1=models.FloatField(default=0)
+    inlab1=models.FloatField(default=0)
+    prelab2=models.FloatField(default=0)
+    inlab2=models.FloatField(default=0)
+    prelab3=models.FloatField(default=0)
+    inlab3=models.FloatField(default=0)
+    prelab4=models.FloatField(default=0)
+    inlab4=models.FloatField(default=0)
+    scorePredict=models.FloatField(default=0)
+    
+    

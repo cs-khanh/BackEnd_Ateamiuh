@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User,PreLab,InLab
+from .models import User,PreLab,InLab,QuestionData,FinalData,predictFinalUser
 
       
 class PrelabSerializer(serializers.ModelSerializer):
@@ -28,3 +28,18 @@ class UserSerializer(serializers.ModelSerializer):
         for inlab_data in inlabs_data:
             InLab.objects.create(user=user, **inlab_data)
         return user
+    
+class QuestionDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionData
+        fields='__all__'
+        
+class FinalDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FinalData
+        fields='__all__'
+
+class predictFinalUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = predictFinalUser
+        fields='__all__'

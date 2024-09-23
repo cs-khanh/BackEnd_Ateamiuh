@@ -2,13 +2,14 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import User,PreLab,InLab,FinalData
+from .models import User,PreLab,InLab,QuestionData,FinalData,predictFinalUser
 from .serializers import UserSerializer,InLabSerializer,PrelabSerializer
 import pandas as pd
 import numpy as np
 import joblib
 import csv
 from django.http import HttpResponse
+from BaiToan2.processing import text_clean,text_sementic,addFeature,Words2Text,Text2Words
 # Create your views here.
 def import_csv(request):
     try:
@@ -78,25 +79,60 @@ def predictInlab4(data):
     return predictions
 
 
-def predictLabFinal(mssv):
-    try: 
-        student_data=FinalData.objects.get(studentID=mssv)
-        arr=[   student_data.prelab1,
-                student_data.inlab1,
-                student_data.prelab2,
-                student_data.inlab2,
-                student_data.prelab3,
-                student_data.inlab3,
-                student_data.prelab4,
-                student_data.inlab4,
-            ]
-        load_model=joblib.load('D:/HK1_2024-2025/AI_HCM/BaiToan3/rf_model.pkl')
-        data=np.array(arr).reshape(1,-1)
-        predictions=load_model.predict(data)
+def predictLabFinal(arrScore):
+    arr=[]
+    for point in arrScore:
+        arr.append(point)
+    load_model=joblib.load('D:/HK1_2024-2025/AI_HCM/BaiToan3/rf_model.pkl')
+    data=np.array(arr).reshape(1,-1)
+    predictions=load_model.predict(data)
+    try:
+        predictFinalUser.objects.create(
+            prelab1=float(arr[0]),
+            inlab1=float(arr[1]),
+            prelab2=float(arr[2]),
+            inlab2=float(arr[3]),
+            prelab3=float(arr[4]),
+            inlab3=float(arr[5]),
+            prelab4=float(arr[6]),
+            inlab4=float(arr[7]),
+            scorePredict=float(predictions)
+        )
         return predictions
-    except FinalData.DoesNotExist:
+    except Exception as e:
         return -1
     
+def meanLab(lab):
+    full=FinalData.objects.values_list(lab,flat=True)
+    full=np.array(full)
+    meanfull=np.sum(full)/len(full)
+    meanfull=round(meanfull,2)
+    return meanfull
+    
+
+def analysisFinal():
+    meanp1=meanLab('prelab1')
+    meani1=meanLab('inlab1')
+    meanp2=meanLab('prelab2')
+    meani2=meanLab('inlab3')
+    meanp3=meanLab('prelab3')
+    meani3=meanLab('inlab3')
+    meanp4=meanLab('prelab4')
+    meani4=meanLab('inlab4')
+    analysisData={'dataAll':[meanp1,meani1,meanp2,meani2,meanp3,meani3,meanp4,meani4,]}
+    return analysisData
+    
+def create_or_update_lab(lab_model, user, entry):
+    lab_model.objects.update_or_create(
+        user=user,
+        name_object=entry['nameObject'],
+        defaults={
+            'max_score': entry['maxScore'],
+            'min_score': entry['minScore'],
+            'attempts': entry['attempts'],
+            'number_of_question': entry['numberOfQuestion']
+        }
+    )
     
 class UserLabDataAPIView(APIView):
     def post(self, request):
@@ -110,28 +146,10 @@ class UserLabDataAPIView(APIView):
                 name_object = entry.get('nameObject', '')
                 # Kiểm tra nếu là Prelab
                 if 'Prelab' in name_object:
-                    PreLab.objects.update_or_create(
-                        user=user,
-                        name_object=name_object,
-                        defaults={
-                            'max_score': entry['maxScore'],
-                            'min_score': entry['minScore'],
-                            'attempts': entry['attempts'],
-                            'number_of_question': entry['numberOfQuestion']
-                        }
-                    )
+                    create_or_update_lab(PreLab, user, entry)
                 # Kiểm tra nếu là Inlab
                 elif 'Inlab' in name_object:
-                    InLab.objects.update_or_create(
-                        user=user,
-                        name_object=name_object,
-                        defaults={
-                            'max_score': entry['maxScore'],
-                            'min_score': entry['minScore'],
-                            'attempts': entry['attempts'],
-                            'number_of_question': entry['numberOfQuestion']
-                        }
-                    )
+                    create_or_update_lab(InLab, user, entry)
             data_arr=[]
             for item in data:
                 growths=float(item["maxScore"])-float(item["minScore"])
@@ -159,7 +177,37 @@ class UserLabDataAPIView(APIView):
             user.save()
             return Response(diem_pre, status=status.HTTP_200_OK)
         if task_type=='predictFinal':
-            mssv=str(data_s.get('data')[0])
-            diem_pre=predictLabFinal(mssv)
+            arrScore=data_s.get('data')
+            diem_pre=predictLabFinal(arrScore)
             return Response(diem_pre, status=status.HTTP_200_OK)
+        if task_type=='analysisFinal':
+            return  Response(analysisFinal(), status=status.HTTP_200_OK)
+        if task_type=='predictQuestionScore':
+            mssv=int(data_s.get('data')[0])
+            question=str(data_s.get('data')[1])
+            numberoftimes=int(data_s.get('data')[2])
+            QuestionData.objects.create(
+                mssv=mssv,
+                question=question,
+                numberOfQuestion=numberoftimes
+            )
+            text=text_clean(question)
+            process=text_sementic(text,'T',False)
+            tfidf_loaded = joblib.load('D:/HK1_2024-2025/AI_HCM/mysite/BaiToan2/tfidf.pkl')
+            df_test=addFeature(tfidf_loaded,process,mssv,numberoftimes)
+            ch2_loaded = joblib.load('D:/HK1_2024-2025/AI_HCM/mysite/BaiToan2/selectkbest_model_chi2.pkl')
+            feature_names = df_test.columns
+            feature_names_chi = [feature_names[i] for i in ch2_loaded.get_support(indices=True)] 
+            feature_names_chi = feature_names_chi[1:(len(feature_names_chi)-1)]
+            feature_names_chi = Words2Text(feature_names_chi)
+            feature_names_chi = text_sementic(feature_names_chi, 'T', False)
+            feature_names_chi = Text2Words(feature_names_chi)
+            tfidf_chi2 = joblib.load('D:/HK1_2024-2025/AI_HCM/mysite/BaiToan2/tfidf1.pkl')
+            df=addFeature(tfidf_chi2,process,mssv,numberoftimes)
+            df = df.drop(df.columns[22], axis=1)
+            df['effort']=1/numberoftimes
+            model_loaded=joblib.load("D:/HK1_2024-2025/AI_HCM/mysite/BaiToan2/model2.pkl")
+            prediction=model_loaded.predict(df)
+            return Response(prediction,status=status.HTTP_200_OK)
+            
                
