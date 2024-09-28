@@ -10,8 +10,8 @@ import joblib
 import csv
 from django.http import HttpResponse
 from BaiToan2.processing import text_clean,text_sementic,addFeature,Words2Text,Text2Words
-path_root="C:/Users/admin/Desktop/WebsiteAteamIUH/BackEnd_Ateamiuh/"
 # Create your views here.
+path_root='D:/HK1_2024-2025/AI_HCM/'
 def import_csv(request):
     try:
         csv_path=path_root+"BaiToan3/data_final.csv"
@@ -204,14 +204,19 @@ class UserLabDataAPIView(APIView):
             df=addFeature(tfidf_chi2,process,mssv,numberoftimes)
             df = df.drop(df.columns[22], axis=1)
             df['effort']=1/numberoftimes
+            df_topic=df.drop(columns=['Mã số ID','count','effort'])
+            df_topic=df_topic.loc[0]
+            columns_with_values = df_topic[df_topic > 0]
+            columns_sorted_by_value = columns_with_values.sort_values(ascending=False).index.tolist()
             model_loaded=joblib.load(path_root+"mysite/BaiToan2/model2.pkl")
             prediction=model_loaded.predict(df)
+            data_topic={'diemPredict':prediction,'topic':columns_sorted_by_value}
             QuestionData.objects.create(
                 mssv=studenID,
                 question=questionSave,
                 numberOfQuestion=numberoftimes,
                 scorePredict=prediction
             )
-            return Response(prediction,status=status.HTTP_200_OK)
+            return Response(data_topic,status=status.HTTP_200_OK)
             
                
