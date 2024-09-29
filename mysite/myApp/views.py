@@ -122,7 +122,19 @@ def analysisFinal():
     meani4=meanLab('inlab4')
     analysisData={'dataAll':[meanp1,meani1,meanp2,meani2,meanp3,meani3,meanp4,meani4,]}
     return analysisData
-    
+
+def check_studentID(mssv):
+    df_prereduce=pd.read_csv(path_root+"mysite/BaiToan2/df_Prereduce_full.csv")
+    df_resreduce=pd.read_csv(path_root+"mysite/BaiToan2/df_resreduce_full.csv")
+    arr_id1=df_prereduce['Mã số ID'].unique()
+    arr_id2=df_resreduce['Mã số ID'].unique()
+    if mssv in arr_id1:
+        return 1
+    elif mssv in arr_id2:
+        return 1
+    else:
+        return 0
+
 def create_or_update_lab(lab_model, user, entry):
     lab_model.objects.update_or_create(
         user=user,
@@ -179,44 +191,49 @@ class UserLabDataAPIView(APIView):
             return Response(diem_pre, status=status.HTTP_200_OK)
         if task_type=='predictFinal':
             arrScore=data_s.get('data')
+            df=pd.read_csv(path_root+'mysite/BaiToan2/feature_importance.csv')
+            df_importance=df['Feature'][0:4].tolist()
             diem_pre=predictLabFinal(arrScore)
-            return Response(diem_pre, status=status.HTTP_200_OK)
+            data_send={"Score":diem_pre,"Feature":df_importance}
+            return Response(data_send, status=status.HTTP_200_OK)
         if task_type=='analysisFinal':
             return  Response(analysisFinal(), status=status.HTTP_200_OK)
         if task_type=='predictQuestionScore':
             mssv=int(data_s.get('data')[0])
-            question=str(data_s.get('data')[1])
-            numberoftimes=int(data_s.get('data')[2])
-            studenID=mssv
-            questionSave=question
-            text=text_clean(question)
-            process=text_sementic(text,'T',False)
-            tfidf_loaded = joblib.load(path_root+'mysite/BaiToan2/tfidf.pkl')
-            df_test=addFeature(tfidf_loaded,process,mssv,numberoftimes)
-            ch2_loaded = joblib.load(path_root+'mysite/BaiToan2/selectkbest_model_chi2.pkl')
-            feature_names = df_test.columns
-            feature_names_chi = [feature_names[i] for i in ch2_loaded.get_support(indices=True)] 
-            feature_names_chi = feature_names_chi[1:(len(feature_names_chi)-1)]
-            feature_names_chi = Words2Text(feature_names_chi)
-            feature_names_chi = text_sementic(feature_names_chi, 'T', False)
-            feature_names_chi = Text2Words(feature_names_chi)
-            tfidf_chi2 = joblib.load(path_root+'mysite/BaiToan2/tfidf1.pkl')
-            df=addFeature(tfidf_chi2,process,mssv,numberoftimes)
-            df = df.drop(df.columns[22], axis=1)
-            df['effort']=1/numberoftimes
-            df_topic=df.drop(columns=['Mã số ID','count','effort'])
-            df_topic=df_topic.loc[0]
-            columns_with_values = df_topic[df_topic > 0]
-            columns_sorted_by_value = columns_with_values.sort_values(ascending=False).index.tolist()
-            model_loaded=joblib.load(path_root+"mysite/BaiToan2/model2.pkl")
-            prediction=model_loaded.predict(df)
-            data_topic={'diemPredict':prediction,'topic':columns_sorted_by_value}
-            QuestionData.objects.create(
-                mssv=studenID,
-                question=questionSave,
-                numberOfQuestion=numberoftimes,
-                scorePredict=prediction
-            )
-            return Response(data_topic,status=status.HTTP_200_OK)
-            
+            if check_studentID(mssv)==1:
+                question=str(data_s.get('data')[1])
+                numberoftimes=int(data_s.get('data')[2])
+                studenID=mssv
+                questionSave=question
+                text=text_clean(question)
+                process=text_sementic(text,'T',False)
+                tfidf_loaded = joblib.load(path_root+'mysite/BaiToan2/tfidf.pkl')
+                df_test=addFeature(tfidf_loaded,process,mssv,numberoftimes)
+                ch2_loaded = joblib.load(path_root+'mysite/BaiToan2/selectkbest_model_chi2.pkl')
+                feature_names = df_test.columns
+                feature_names_chi = [feature_names[i] for i in ch2_loaded.get_support(indices=True)] 
+                feature_names_chi = feature_names_chi[1:(len(feature_names_chi)-1)]
+                feature_names_chi = Words2Text(feature_names_chi)
+                feature_names_chi = text_sementic(feature_names_chi, 'T', False)
+                feature_names_chi = Text2Words(feature_names_chi)
+                tfidf_chi2 = joblib.load(path_root+'mysite/BaiToan2/tfidf1.pkl')
+                df=addFeature(tfidf_chi2,process,mssv,numberoftimes)
+                df = df.drop(df.columns[22], axis=1)
+                df['effort']=1/numberoftimes
+                df_topic=df.drop(columns=['Mã số ID','count','effort'])
+                df_topic=df_topic.loc[0]
+                columns_with_values = df_topic[df_topic > 0]
+                columns_sorted_by_value = columns_with_values.sort_values(ascending=False).index.tolist()
+                model_loaded=joblib.load(path_root+"mysite/BaiToan2/model2.pkl")
+                prediction=model_loaded.predict(df)
+                data_topic={'diemPredict':prediction,'topic':columns_sorted_by_value}
+                QuestionData.objects.create(
+                    mssv=studenID,
+                    question=questionSave,
+                    numberOfQuestion=numberoftimes,
+                    scorePredict=prediction
+                )
+                return Response(data_topic,status=status.HTTP_200_OK)
+            else:
+                return Response(-2,status=status.HTTP_200_OK)
                
