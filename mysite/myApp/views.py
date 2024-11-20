@@ -1,3 +1,6 @@
+﻿from google.oauth2 import service_account
+from googleapiclient.discovery import build
+
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
@@ -8,10 +11,21 @@ import pandas as pd
 import numpy as np
 import joblib
 import csv
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from django.http import JsonResponse
 from BaiToan2.processing import text_clean,text_sementic,addFeature,Words2Text,Text2Words
+from google.analytics.data_v1beta import BetaAnalyticsDataClient
+from google.analytics.data_v1beta.types import DateRange, Metric, Dimension, RunReportRequest
+from django.http import JsonResponse
+import os
+from .google_analytics import get_analytics_data
+from django.shortcuts import render
+
+
 # Create your views here.
-path_root='D:/HK1_2024-2025/AI_HCM/'
+path_root='C:/Users/Administrator/Desktop/UIT_HCM/BackEnd_Ateamiuh/'
 def import_csv(request):
     try:
         csv_path=path_root+"BaiToan3/data_final.csv"
@@ -236,4 +250,36 @@ class UserLabDataAPIView(APIView):
                 return Response(data_topic,status=status.HTTP_200_OK)
             else:
                 return Response(-2,status=status.HTTP_200_OK)
-               
+ 
+
+SERVICE_ACCOUNT_FILE = r'C:\Users\Administrator\Desktop\UIT_HCM\client_secret.json'
+PROPERTY_ID = '460488076'
+
+def get_analytics_data(request):
+    # Tạo client để kết nối với Google Analytics Data API
+    client = BetaAnalyticsDataClient.from_service_account_json(SERVICE_ACCOUNT_FILE)
+
+    # Cấu hình truy vấn để lấy dữ liệu
+    request = RunReportRequest(
+        property=f"properties/{PROPERTY_ID}",
+        dimensions=[Dimension(name="eventName")],  # Truy vấn tên sự kiện
+        metrics=[
+            Metric(name="eventCount"),  # Số lượng sự kiện
+            Metric(name="activeUsers")  # Số người dùng
+        ],
+        date_ranges=[DateRange(start_date="2023-10-01", end_date="today")],
+    )
+
+    # Thực hiện truy vấn
+    response = client.run_report(request)
+
+    # Trả về dữ liệu dưới dạng JSON
+    data = []
+    for row in response.rows:
+        data.append({
+            "event_name": row.dimension_values[0].value,
+            "event_count": row.metric_values[0].value,
+            "active_users": row.metric_values[1].value,
+        })
+
+    return JsonResponse({"analytics_data": data})

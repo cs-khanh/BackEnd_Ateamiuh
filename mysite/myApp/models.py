@@ -61,5 +61,3 @@ class predictFinalUser(models.Model):
     prelab4=models.FloatField(default=0)
     inlab4=models.FloatField(default=0)
     scorePredict=models.FloatField(default=0)
-    
-    
